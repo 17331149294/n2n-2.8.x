@@ -45,7 +45,9 @@ endif(NOT DEFINED N2N_OPTION_AES)
 if(N2N_OPTION_AES)
   find_package(OpenSSL QUIET)
   if(NOT OPENSSL_FOUND)
-    message(FATAL_ERROR "错误：未找到 OpenSSL 库，无法启用 AES 加密支持，请先安装 OpenSSL。")
+    MESSAGE(WARNING "OpenSSL not found, AES disabled.")
+    set(N2N_OPTION_AES OFF)
+    message(FATAL_ERROR "错误：未找到 OpenSSL 库，无法使用-A3 A4 加密")
   else()
     include_directories(${OPENSSL_INCLUDE_DIR})
     add_definitions(-DN2N_HAVE_AES)
@@ -61,14 +63,14 @@ endif(NOT DEFINED CMAKE_BUILD_TYPE)
 
 if (DEFINED UNIX)
 # None
-set(CMAKE_C_FLAGS "-Wall -Wshadow -Wpointer-arith -Wmissing-declarations -Wnested-externs")
-set(CMAKE_CXX_FLAGS "-Wall -Wshadow -Wpointer-arith -Wmissing-declarations -Wnested-externs")
+set(CMAKE_C_FLAGS "-Wall -Wshadow -Wpointer-arith -Wmissing-declarations -Wnested-externs -w")
+set(CMAKE_CXX_FLAGS "-Wall -Wshadow -Wpointer-arith -Wmissing-declarations -Wnested-externs -w")
 # Debug 
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 # Release
-set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -s")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s -w")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -s -w")
 endif(DEFINED UNIX)
 
 # Static target.
