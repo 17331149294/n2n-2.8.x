@@ -128,7 +128,7 @@ jobs:
           upx --lzma --best example_sn_embed
           upx --lzma --best supernode
           upx --lzma --best n2n-benchmark
-          zip n2n_多线程-${{ env.TARGET }}.zip edge example_edge_embed example_edge_embed_quick_edge_init example_sn_embed supernode n2n-benchmark
+          zip n2n-pthread-${{ env.TARGET }}.zip edge example_edge_embed example_edge_embed_quick_edge_init example_sn_embed supernode n2n-benchmark
           tagtime=$(date '+%Y-%m-%d')
           echo "tagtime=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
           echo "build_time=$(date '+%Y年%m月%d日%H:%M:%S' | jq -sRr @uri)" >> $GITHUB_ENV
@@ -153,7 +153,7 @@ jobs:
            > ### ![](https://img.shields.io/badge/%E7%BC%96%E8%AF%91%E6%97%B6%E9%97%B4-${{ env.build_time }}-8267?logo=github&labelColor=%E9%A1%BB)![](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.tagtime }}/total?label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&logo=github)
            
           tag_name: ${{ env.tagtime }}
-          files: build/n2n_多线程-${{ env.TARGET }}.zip
+          files: build/n2n-pthread-${{ env.TARGET }}.zip
       - 
        name: 删除工作流
        uses: GitRML/delete-workflow-runs@main
