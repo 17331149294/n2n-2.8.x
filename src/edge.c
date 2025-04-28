@@ -161,6 +161,7 @@ static void help() {
   printf("---------------------- new features from ntop's n2n_v2.8.0 (by github.com/lucktu/cnn2n 2.8.x-pthread) ----------------------\n");
   printf("-a <mode:address>        | + Default(no -a ...) = autoip, eg. 172.17.12.x\n");
   printf("-M <mtu>                 | Default = %d\n", DEFAULT_MTU);
+  printf("-J <threads>             | Default = number of CPU cores detected\n");
   printf("\n");
   printf("Recommended: -A5, -E\n");
 #ifdef WIN32
@@ -246,7 +247,7 @@ static void setPayloadEncryption( n2n_edge_conf_t *conf, int cipher) {
 
 /* *************************************************** */
 
-static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec, n2n_edge_conf_t *conf) {
+static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec, n2n_edge_conf_t *conf, n2n_edge_t *eee) {
   /* traceEvent(TRACE_NORMAL, "Option %c = %s", optkey, optargument ? optargument : ""); */
 
   switch(optkey) {
@@ -472,6 +473,17 @@ static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec
       break;
     }
 
+  case 'J': /* Set the number of worker threads */
+    {
+      int threads = atoi(optargument);
+      if (threads < 1) {
+          traceEvent(TRACE_ERROR, "Invalid number of threads, using default (CPU cores).");
+      } else {
+          eee->threads_num = threads;
+      }
+          break;
+    }
+	  
   case 'h': /* help */
     {
       help();
@@ -509,7 +521,7 @@ static const struct option long_options[] =
 /* *************************************************** */
 
 /* read command line options */
-static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec) {
+static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec, n2n_edge_t *eee) {
   u_char c;
 
   while ((c = getopt_long(argc, argv,
@@ -520,7 +532,7 @@ static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap
                           ,
                           long_options, NULL)) != '?') {
     if(c == 255) break;
-    setOption(c, optarg, ec, conf);
+    setOption(c, optarg, ec, conf, eee);
   }
 
   return 0;
@@ -546,7 +558,7 @@ static char *trim(char *s) {
 /* *************************************************** */
 
 /* parse the configuration file */
-static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec) {
+static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec, n2n_edge_t *eee) {
   char buffer[4096], *line, *key, *value;
   u_int line_len, opt_name_len;
   FILE *fd;
@@ -582,7 +594,7 @@ static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv
 	  if(line_len > opt_name_len + 1) value = trim(&key[opt_name_len + 1]);
 
 	  // traceEvent(TRACE_NORMAL, "long key: %s value: %s", key, value);
-	  setOption(opt->val, value, ec, conf);
+	  setOption(opt->val, value, ec, conf, eee);
 	  break;
 	}
 
@@ -616,7 +628,7 @@ static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv
         }
       }
       // traceEvent(TRACE_NORMAL, "key: %c value: %s", key[0], value);
-      setOption(key[0], value, ec, conf);
+      setOption(key[0], value, ec, conf, eee);
     } else {
       traceEvent(TRACE_WARNING, "Skipping unrecognized line: %s", line);
       continue;
@@ -821,7 +833,16 @@ int start_worker_threads(n2n_edge_t *eee) {
     if( res != 0 )
         return -1;
 
-    eee->threads_num = sysconf(_SC_NPROCESSORS_ONLN);
+    // 如果命令行参数中指定了线程数，则使用指定的线程数；
+    // 否则，使用 CPU 核心数
+    if (eee->threads_num <= 0) {
+        eee->threads_num = sysconf(_SC_NPROCESSORS_ONLN); // 默认值：CPU 核心数
+    }
+
+    // 如果线程数超过 CPU 核心数，则将线程数设置为 CPU 核心数
+    if (eee->threads_num > sysconf(_SC_NPROCESSORS_ONLN)) {
+        eee->threads_num = sysconf(_SC_NPROCESSORS_ONLN);
+    }
     if (eee->threads_num < 1)
         return -1;
 
@@ -876,15 +897,15 @@ int main(int argc, char* argv[]) {
   snprintf(ec.netmask, sizeof(ec.netmask), "255.255.255.0");
 
   if((argc >= 2) && (argv[1][0] != '-')) {
-    rc = loadFromFile(argv[1], &conf, &ec);
+    rc = loadFromFile(argv[1], &conf, &ec, eee);
     if(argc > 2)
-      rc = loadFromCLI(argc, argv, &conf, &ec);
+      rc = loadFromCLI(argc, argv, &conf, &ec, eee);
   } else if(argc > 1)
-    rc = loadFromCLI(argc, argv, &conf, &ec);
+    rc = loadFromCLI(argc, argv, &conf, &ec, eee);
   else
 #ifdef WIN32
     /* Load from current directory */
-    rc = loadFromFile("edge.conf", &conf, &ec);
+    rc = loadFromFile("edge.conf", &conf, &ec, eee);
 #else
   rc = -1;
 #endif
