@@ -479,6 +479,10 @@ static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec
       break;
     }
 
+  case 'J': 
+    {
+      break;
+    }
   case 'v': /* verbose */
     setTraceLevel(getTraceLevel() + 1);
     break;
@@ -514,7 +518,7 @@ static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap
   u_char c;
 
   while ((c = getopt_long(argc, argv,
-                          "k:a:bc:Eu:g:m:M:s:d:l:p:fvhrt:i:SDL:z::A::Hn:"
+                          "k:a:bc:Eu:g:m:M:s:d:l:p:fvhrt:i:SDL:z::A::Hn:J:"
 #ifdef __linux__
                           "T:"
 #endif
