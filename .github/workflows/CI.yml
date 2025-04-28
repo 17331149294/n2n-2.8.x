@@ -137,7 +137,7 @@ jobs:
         uses: actions/upload-artifact@master
         if: always()
         with:
-         name: n2n_多线程-${{ env.TARGET }}
+         name: n2n-pthread-${{ env.TARGET }}
          path: |
            build/edge
            build/example_edge_embed
