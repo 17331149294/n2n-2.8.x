@@ -247,7 +247,7 @@ static void setPayloadEncryption( n2n_edge_conf_t *conf, int cipher) {
 
 /* *************************************************** */
 
-static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec, n2n_edge_conf_t *conf, n2n_edge_t *eee) {
+static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec, n2n_edge_conf_t *conf) {
   /* traceEvent(TRACE_NORMAL, "Option %c = %s", optkey, optargument ? optargument : ""); */
 
   switch(optkey) {
@@ -472,17 +472,6 @@ static int setOption(int optkey, char *optargument, n2n_tuntap_priv_config_t *ec
       conf->allow_p2p = 0;
       break;
     }
-
-  case 'J': /* Set the number of worker threads */
-    {
-      int threads = atoi(optargument);
-      if (threads < 1) {
-          traceEvent(TRACE_ERROR, "Invalid number of threads, using default (CPU cores).");
-      } else {
-          eee->threads_num = threads;
-      }
-          break;
-    }
 	  
   case 'h': /* help */
     {
@@ -521,7 +510,7 @@ static const struct option long_options[] =
 /* *************************************************** */
 
 /* read command line options */
-static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec, n2n_edge_t *eee) {
+static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec) {
   u_char c;
 
   while ((c = getopt_long(argc, argv,
@@ -532,7 +521,7 @@ static int loadFromCLI(int argc, char *argv[], n2n_edge_conf_t *conf, n2n_tuntap
                           ,
                           long_options, NULL)) != '?') {
     if(c == 255) break;
-    setOption(c, optarg, ec, conf, eee);
+    setOption(c, optarg, ec, conf);
   }
 
   return 0;
@@ -558,7 +547,7 @@ static char *trim(char *s) {
 /* *************************************************** */
 
 /* parse the configuration file */
-static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec, n2n_edge_t *eee) {
+static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv_config_t *ec) {
   char buffer[4096], *line, *key, *value;
   u_int line_len, opt_name_len;
   FILE *fd;
@@ -594,7 +583,7 @@ static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv
 	  if(line_len > opt_name_len + 1) value = trim(&key[opt_name_len + 1]);
 
 	  // traceEvent(TRACE_NORMAL, "long key: %s value: %s", key, value);
-	  setOption(opt->val, value, ec, conf, eee);
+	  setOption(opt->val, value, ec, conf);
 	  break;
 	}
 
@@ -628,7 +617,7 @@ static int loadFromFile(const char *path, n2n_edge_conf_t *conf, n2n_tuntap_priv
         }
       }
       // traceEvent(TRACE_NORMAL, "key: %c value: %s", key[0], value);
-      setOption(key[0], value, ec, conf, eee);
+      setOption(key[0], value, ec, conf);
     } else {
       traceEvent(TRACE_WARNING, "Skipping unrecognized line: %s", line);
       continue;
@@ -833,8 +822,7 @@ int start_worker_threads(n2n_edge_t *eee) {
     if( res != 0 )
         return -1;
 
-    // 如果命令行参数中指定了线程数，则使用指定的线程数；
-    // 否则，使用 CPU 核心数
+    // 如果命令行参数中指定了线程数，则使用指定的线程数，否则使用 CPU 核心数
     if (eee->threads_num <= 0) {
         eee->threads_num = sysconf(_SC_NPROCESSORS_ONLN); // 默认值：CPU 核心数
     }
@@ -874,7 +862,7 @@ int main(int argc, char* argv[]) {
 #ifdef HAVE_LIBCAP
   cap_t caps;
 #endif
-
+  
   /* Defaults */
   edge_init_conf_defaults(&conf);
   memset(&ec, 0, sizeof(ec));
@@ -897,15 +885,15 @@ int main(int argc, char* argv[]) {
   snprintf(ec.netmask, sizeof(ec.netmask), "255.255.255.0");
 
   if((argc >= 2) && (argv[1][0] != '-')) {
-    rc = loadFromFile(argv[1], &conf, &ec, eee);
+    rc = loadFromFile(argv[1], &conf, &ec);
     if(argc > 2)
-      rc = loadFromCLI(argc, argv, &conf, &ec, eee);
+      rc = loadFromCLI(argc, argv, &conf, &ec);
   } else if(argc > 1)
-    rc = loadFromCLI(argc, argv, &conf, &ec, eee);
+    rc = loadFromCLI(argc, argv, &conf, &ec);
   else
 #ifdef WIN32
     /* Load from current directory */
-    rc = loadFromFile("edge.conf", &conf, &ec, eee);
+    rc = loadFromFile("edge.conf", &conf, &ec);
 #else
   rc = -1;
 #endif
@@ -950,6 +938,16 @@ int main(int argc, char* argv[]) {
 		traceEvent(TRACE_ERROR, "Failed in edge_init");
 		exit(1);
 	}
+	for (int i = 1; i < argc; i++) {
+        	if (strcmp(argv[i], "-J") == 0 && (i + 1) < argc) {
+            		int thread_num = atoi(argv[i + 1]);
+            		if (thread_num > 0) {
+                		eee->threads_num = thread_num;
+                		traceEvent(TRACE_NORMAL, "Specified number of CPU threads: %d", eee->threads_num);
+            		}
+            		break; 
+        	}
+  	}
 	memcpy(&(eee->tuntap_priv_conf), &ec, sizeof(ec));
 
 	if ((0 == strcmp("static", eee->tuntap_priv_conf.ip_mode)) ||
