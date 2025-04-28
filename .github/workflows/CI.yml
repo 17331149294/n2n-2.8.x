@@ -68,8 +68,8 @@ jobs:
       - name: 编译
         run: |
           export PATH=/opt/musl_gcc/${{ env.TARGET }}-cross/bin:$PATH
-          export CC="/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-gcc -static"
-          export CXX="/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-g++ -static"
+          export CC=/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-gcc
+          export CXX=/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-g++
           export AR=/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-ar
           export LD=/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-ld
           export RANLIB=/opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-ranlib
@@ -101,7 +101,7 @@ jobs:
             -DCMAKE_STRIP=${STRIP} \
             -DOPENSSL_ROOT_DIR=/opt/openssl-${{ env.TARGET }} \
             -DOPENSSL_USE_STATIC_LIBS=TRUE \
-            -DBUILD_SHARED_LIBS=OFF
+            -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++" 
 
           make -j$(nproc)
           
