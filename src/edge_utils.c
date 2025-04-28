@@ -400,7 +400,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 
         // 如果没有wget和curl，报错
         if (!has_wget && !has_curl) {
-            traceEvent(TRACE_ERROR, "错误: 系统内没有 wget 或 curl 命令 无法使用重定向功能");
+            traceEvent(TRACE_ERROR, "The system does not have the wget or curl command and cannot use the redirection feature");
             return -1;
         }
 
@@ -422,7 +422,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 
         FILE *fp = popen(cmd, "r");
         if (fp == NULL) {
-            traceEvent(TRACE_ERROR, "错误: 无法执行命令获取重定向地址");
+            traceEvent(TRACE_ERROR, "Unable to execute the command to get the redirection UR");
             return -1;
         }
 
@@ -450,7 +450,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 
 	// 检查是否找到HTTP头
 	if (last_http == NULL) {
-    		traceEvent(TRACE_ERROR, "错误: 没有找到HTTP响应头");
+    		traceEvent(TRACE_ERROR, "No HTTP response headers found");
     		return -1;
 	}
         // 分析返回内容，不区分 curl 和 wget
@@ -459,7 +459,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 	 
 	// 从返回内容中解析HTTP状态码
 	if (sscanf(last_http, "HTTP/1.1 %d", &status_code) != 1 && sscanf(last_http, "HTTP/2 %d", &status_code) != 1) {
-    		traceEvent(TRACE_ERROR, "错误: 无法解析HTTP状态码");
+    		traceEvent(TRACE_ERROR, "Unable to parse the HTTP status code");
     		return -1;
 	}
 	 
@@ -477,9 +477,9 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 					redirect_url[sizeof(redirect_url) - 1] = '\0'; // 保证 redirect_url 以 '\0' 结尾
         				safe_strncpy(addr, redirect_url, sizeof(addr));
         				strip_http_prefix(addr); // 去掉http://或https://前缀
-        				traceEvent(TRACE_NORMAL, "检测到重定向地址: %s", addr);
+        				traceEvent(TRACE_NORMAL, "HTTP 3XX Redirect URL detected: %s", addr);
     			} else {
-        			traceEvent(TRACE_ERROR, "错误: 找不到Location头");
+        			traceEvent(TRACE_ERROR, "Location header not found");
         			return -1;
     			}
 	} else if (status_code == 200) {
@@ -531,15 +531,15 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         		// 去掉 http:// 或 https:// 前缀
         		strip_http_prefix(addr);
         		// 打印成功日志
-        		traceEvent(TRACE_NORMAL, "HTTP 200 使用网页正文作为地址: %s", addr);
+        		traceEvent(TRACE_NORMAL, "HTTP 200 Use the webpage body as the address: %s", addr);
     		} else {
         		// 如果找不到正文，打印错误日志
-        		traceEvent(TRACE_ERROR, "错误: 没有找到HTTP正文内容");
+        		traceEvent(TRACE_ERROR, "No HTTP body content found");
         		return -1;
     		}
 	} else {
    		 // 其他状态码
-    		traceEvent(TRACE_ERROR, "错误: 非预期状态码 %d", status_code);
+    		traceEvent(TRACE_ERROR, "Unexpected status code: %d", status_code);
     		return -1;
 	}
   }
