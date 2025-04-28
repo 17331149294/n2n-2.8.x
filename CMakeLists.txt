@@ -24,7 +24,7 @@ execute_process(
 )
 string(REGEX REPLACE "\n$" "" GIT_REV "${GIT_REV}")
 string(REGEX REPLACE "\n$" "" GIT_ID "${GIT_ID}")
-set(N2N_VERSION "${N2N_VERSION}.r${GIT_REV}.${GIT_ID}")
+set(N2N_VERSION "${N2N_VERSION}-多线程")
 MESSAGE(STATUS "Build from git rev: ${N2N_VERSION}")
 endif (GIT_EXIST)
 
@@ -45,8 +45,7 @@ endif(NOT DEFINED N2N_OPTION_AES)
 if(N2N_OPTION_AES)
   find_package(OpenSSL QUIET)
   if(NOT OPENSSL_FOUND)
-    MESSAGE(WARNING "OpenSSL not found, AES disabled.")
-    set(N2N_OPTION_AES OFF)
+    message(FATAL_ERROR "错误：未找到 OpenSSL 库，无法启用 AES 加密支持，请先安装 OpenSSL。")
   else()
     include_directories(${OPENSSL_INCLUDE_DIR})
     add_definitions(-DN2N_HAVE_AES)
@@ -68,8 +67,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wshadow -Wpointer-arith -Wmissing-declarations -Wnes
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 # Release
-set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -s")
 endif(DEFINED UNIX)
 
 # Static target.
