@@ -377,6 +377,12 @@ char *find_last_line_or_all(const char *buf) {
         return (char *)buf; // 没有换行，直接返回整个内容
     }
 }
+// 将字符串 src 安全拷贝到 dst，防止越界，同时保证 dst 以 '\0' 结尾
+static void safe_strncpy(char *dst, const char *src, size_t dst_size) {
+    if (dst_size == 0) return; // 如果目标大小为0，直接返回
+    strncpy(dst, src, dst_size - 1); // 只拷贝 dst_size-1 个字节
+    dst[dst_size - 1] = '\0'; // 手动添加字符串结束符
+}
 /* ############################################################################################################################################################################################################### */
 static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
   n2n_sn_name_t addr;
@@ -407,12 +413,12 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         	snprintf(addr, sizeof(addr), "%s", addr);
     	}
 	 
-        // 构造命令，优先使用wget
-        if (has_wget) {
-            snprintf(cmd, sizeof(cmd), "wget --no-check-certificate --server-response --max-redirect=3 -q -O - '%s' 2>&1", addr);
-        } else if (has_curl) {
-            snprintf(cmd, sizeof(cmd), "curl -i -Lks '%s' 2>&1", addr);
-        }  
+        // 构造命令，优先使用curl
+        if (has_curl) {
+            snprintf(cmd, sizeof(cmd), "curl -i -Lks --retry 5 --retry-delay 2 '%s' 2>&1", addr);
+        } else if (has_wget) {
+            snprintf(cmd, sizeof(cmd), "(for i in 1 2 3 4 5; do wget --no-check-certificate --server-response -q -O - '%s' && break; sleep 2; done) 2>&1", addr);
+        } 
 
         FILE *fp = popen(cmd, "r");
         if (fp == NULL) {
@@ -468,7 +474,8 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         			char *end = strchr(location, '\n');
         			if (end) *end = '\0'; // 截断这一行
         				strncpy(redirect_url, location, sizeof(redirect_url) - 1);
-        				strncpy(addr, redirect_url, sizeof(redirect_url) - 1);
+					redirect_url[sizeof(redirect_url) - 1] = '\0'; // 保证 redirect_url 以 '\0' 结尾
+        				safe_strncpy(addr, redirect_url, sizeof(addr));
         				strip_http_prefix(addr); // 去掉http://或https://前缀
         				traceEvent(TRACE_NORMAL, "检测到重定向地址: %s", addr);
     			} else {
@@ -517,14 +524,12 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
                 			clean_addr[j++] = body[i];
             			}
         		}
-        		clean_addr[j] = '\0'; // 结尾加上字符串结束符
-
+			clean_addr[sizeof(clean_addr) - 1] = '\0'; 
         		// 更新 addr 变量
-        		strncpy(addr, clean_addr, sizeof(clean_addr) - 1);
+        		safe_strncpy(addr, clean_addr, sizeof(addr));
 
         		// 去掉 http:// 或 https:// 前缀
         		strip_http_prefix(addr);
-
         		// 打印成功日志
         		traceEvent(TRACE_NORMAL, "HTTP 200 使用网页正文作为地址: %s", addr);
     		} else {
@@ -538,6 +543,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
     		return -1;
 	}
   }
+	
   supernode_host = strtok(addr, ":");
 
   if(supernode_host) {
@@ -546,7 +552,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
     const struct addrinfo aihints = {0, PF_INET, 0, 0, 0, NULL, NULL, NULL};
     struct addrinfo * ainfo = NULL;
     int nameerr;
-
+	  
     if(supernode_port)
       sn->port = atoi(supernode_port);
     else
@@ -554,17 +560,14 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 		 addr, supernode_host, supernode_port);
 
     nameerr = getaddrinfo(supernode_host, NULL, &aihints, &ainfo);
-
     if(0 == nameerr)
       {
 	struct sockaddr_in * saddr;
-
 	/* ainfo s the head of a linked list if non-NULL. */
 	if(ainfo && (PF_INET == ainfo->ai_family))
 	  {
 	    /* It is definitely and IPv4 address -> sockaddr_in */
 	    saddr = (struct sockaddr_in *)ainfo->ai_addr;
-
 	    memcpy(sn->addr.v4, &(saddr->sin_addr.s_addr), IPV4_SIZE);
 	    sn->family=AF_INET;
 	  }
@@ -574,7 +577,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 	    traceEvent(TRACE_WARNING, "Failed to resolve supernode IPv4 address for %s", supernode_host);
 	    rv = -1;
 	  }
-
 	freeaddrinfo(ainfo); /* free everything allocated by getaddrinfo(). */
 	ainfo = NULL;
       } else {
@@ -586,7 +588,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
     traceEvent(TRACE_WARNING, "Wrong supernode parameter (-l <host:port>)");
     rv = -3;
   }
-
   return(rv);
 }
 
