@@ -65,6 +65,7 @@ if(N2N_OPTION_AES)
     else()
         include_directories(${OPENSSL_INCLUDE_DIR})
         add_definitions(-DN2N_HAVE_AES)
+        add_definitions(-DHAVE_OPENSSL_1_1)
     endif(NOT OPENSSL_FOUND)
 endif(N2N_OPTION_AES)
 
