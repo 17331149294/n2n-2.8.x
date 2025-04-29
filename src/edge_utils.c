@@ -15,10 +15,14 @@
  * along with this program; if not see see <http://www.gnu.org/licenses/>
  *
  */
-#include <regex.h>
-#include <ares.h> 
+#include <regex.h> 
+#include <ares.h>    // 引入 c-ares 头文件解析txt记录
 #include "n2n.h"
 #include "edge_utils_win32.h"
+
+// 定义常量，模拟从 ares.h 中引入的常量
+#define ns_c_in 1     // IN class (Internet)
+#define ns_t_txt 16   // TXT record type
 
 /* heap allocation for compression as per lzo example doc */
 #define HEAP_ALLOC(var,size) lzo_align_t __LZO_MMODEL var [ ((size) + (sizeof(lzo_align_t) - 1)) / sizeof(lzo_align_t) ]
