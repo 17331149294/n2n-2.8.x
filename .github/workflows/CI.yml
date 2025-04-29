@@ -101,6 +101,7 @@ jobs:
             -DCMAKE_STRIP=${STRIP} \
             -DOPENSSL_ROOT_DIR=/opt/openssl-${{ env.TARGET }} \
             -DOPENSSL_USE_STATIC_LIBS=TRUE \
+            -DHAVE_OPENSSL_1_1 \
             -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++" 
 
           make -j$(nproc)
