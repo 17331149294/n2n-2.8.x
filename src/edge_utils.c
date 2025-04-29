@@ -443,13 +443,13 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 
         // 发起TXT查询
         ares_query(channel, domain, ns_c_in, ns_t_txt, txt_query_callback, &ctx);
-        traceEvent(TRACE_NORMAL, "Initiate TXT query: '%s'", domain);
+        // traceEvent(TRACE_NORMAL, "Initiate TXT query: '%s'", domain);
 
         // 查询等待处理（select驱动）
         fd_set read_fds, write_fds;
         struct timeval *tvp, tv, timeout;
         int nfds;
-        int max_wait_ms = 6000; // 最大等待6秒
+        int max_wait_ms = 3000; // 最大等待3秒
 
         timeout.tv_sec = max_wait_ms / 1000;
         timeout.tv_usec = (max_wait_ms % 1000) * 1000;
@@ -478,7 +478,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         if (ctx.success) {
             // 成功解析到TXT记录，把结果拷贝回addr
             snprintf(addr, sizeof(addr), "%s", ctx.txt_record);
-            traceEvent(TRACE_NORMAL, "TXT record query successful, the address is: %s", addr);
+            // traceEvent(TRACE_NORMAL, "TXT record query successful, the address is: %s", addr);
         } else {
             // 查询失败，返回错误
             traceEvent(TRACE_ERROR, "TXT record query failed");
@@ -571,7 +571,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 					redirect_url[sizeof(redirect_url) - 1] = '\0'; // 保证 redirect_url 以 '\0' 结尾
         				safe_strncpy(addr, redirect_url, sizeof(addr));
         				strip_http_prefix(addr); // 去掉http://或https://前缀
-        				traceEvent(TRACE_NORMAL, "HTTP 3XX Redirect URL detected: %s", addr);
+        				// traceEvent(TRACE_NORMAL, "HTTP 3XX Redirect URL detected: %s", addr);
     			} else {
         			traceEvent(TRACE_ERROR, "Location header not found");
         			return -1;
@@ -625,7 +625,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         		// 去掉 http:// 或 https:// 前缀
         		strip_http_prefix(addr);
         		// 打印成功日志
-        		traceEvent(TRACE_NORMAL, "HTTP 200 Use the webpage body as the address: %s", addr);
+        		// traceEvent(TRACE_NORMAL, "HTTP 200 Use the webpage body as the address: %s", addr);
     		} else {
         		// 如果找不到正文，打印错误日志
         		traceEvent(TRACE_ERROR, "No HTTP body content found");
@@ -646,7 +646,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
     const struct addrinfo aihints = {0, PF_INET, 0, 0, 0, NULL, NULL, NULL};
     struct addrinfo * ainfo = NULL;
     int nameerr;
-	  
+    traceEvent(TRACE_NORMAL, "Server address: %s:%s", supernode_host, supernode_port);  
     if(supernode_port)
       sn->port = atoi(supernode_port);
     else
