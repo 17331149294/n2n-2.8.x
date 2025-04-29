@@ -77,7 +77,7 @@ jobs:
 
           if [ ! -d "/opt/openssl-${{ env.TARGET }}" ]; then
             #克隆openssl
-            git clone --recursive https://github.com/openssl/openssl -b openssl-3.5.0
+            git clone --recursive https://github.com/openssl/openssl -b OpenSSL_1_1_1-stable
             cd openssl
             echo "###########################编译openssl依赖库########################"
             ./Configure no-shared no-zlib --prefix=/opt/openssl-${{ env.TARGET }} ${{ env.OPENSSL_TARGET }} LDFLAGS="-static -I/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/include -L/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/lib" CFLAGS="-static -I/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/include -L/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/lib"
