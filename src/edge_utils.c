@@ -509,7 +509,7 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 	 
         // 构造命令，优先使用curl
         if (has_curl) {
-            snprintf(cmd, sizeof(cmd), "curl -i -Lks --retry 5 --retry-delay 2 '%s' 2>&1", addr);
+            snprintf(cmd, sizeof(cmd), "curl -iks --retry 5 --retry-delay 2 '%s' 2>&1", addr);
         } else if (has_wget) {
             snprintf(cmd, sizeof(cmd), "(for i in 1 2 3 4 5; do wget --no-check-certificate --server-response -q -O - '%s' && break; sleep 2; done) 2>&1", addr);
         } 
