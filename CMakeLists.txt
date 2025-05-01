@@ -7,9 +7,6 @@ project(n2n)
 # 引入检查函数模块
 include(CheckFunctionExists)
 
-# 引入 ExternalProject 模块，用于自动拉取第三方库
-include(ExternalProject)
-
 # 打开详细编译输出
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -65,7 +62,13 @@ if(N2N_OPTION_AES)
     else()
         include_directories(${OPENSSL_INCLUDE_DIR})
         add_definitions(-DN2N_HAVE_AES)
-        add_definitions(-DHAVE_OPENSSL_1_1)
+        include(CheckSymbolExists)  
+  	set(CMAKE_REQUIRED_INCLUDES ${OPENSSL_INCLUDE_DIR})  
+  	set(CMAKE_REQUIRED_LIBRARIES ${OPENSSL_LIBRARIES})  
+  	check_symbol_exists(EVP_CIPHER_CTX_reset "openssl/evp.h" HAVE_OPENSSL_1_1)  
+  	if(HAVE_OPENSSL_1_1)  
+    		add_definitions(-DHAVE_OPENSSL_1_1)  
+  	endif() 
     endif(NOT OPENSSL_FOUND)
 endif(N2N_OPTION_AES)
 
@@ -94,36 +97,12 @@ if(DEFINED WIN32)
     INCLUDE_DIRECTORIES(win32)
 endif(DEFINED WIN32)
 
-# ========== 这里开始加入 c-ares 自动下载编译 ==========
-
-# 配置 c-ares 仓库信息
-set(CARES_REPO "https://github.com/c-ares/c-ares.git")  # c-ares 仓库地址
-set(CARES_TAG "v1.34.5")                           # 指定 c-ares 版本 tag
-set(CARES_INSTALL_DIR ${CMAKE_BINARY_DIR}/thirdparty/c-ares-install)  # 安装目录
-
-# 使用 ExternalProject 自动下载、编译、安装 c-ares
-ExternalProject_Add(c-ares
-    PREFIX ${CMAKE_BINARY_DIR}/thirdparty/c-ares
-    GIT_REPOSITORY ${CARES_REPO}
-    GIT_TAG ${CARES_TAG}
-    UPDATE_COMMAND ""  # 不自动更新
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${CARES_INSTALL_DIR} -DCARES_STATIC=ON -DCARES_SHARED=OFF <SOURCE_DIR>
-    BUILD_COMMAND $(MAKE)
-    INSTALL_COMMAND $(MAKE) install
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON
-    LOG_INSTALL ON
-)
-
-# 包含 c-ares 的头文件目录
-include_directories(${CARES_INSTALL_DIR}/include)
-
-# 添加 c-ares 的静态库目录
-link_directories(${CARES_INSTALL_DIR}/lib)
-
-# ========== c-ares 配置结束 ==========
-
+set(CARES_STATIC ON CACHE BOOL "Build static c-ares library")
+set(CARES_SHARED OFF CACHE BOOL "Do not build shared c-ares library")
+set(CARES_INSTALL OFF CACHE BOOL "")
+set(CARES_BUILD_TOOLS OFF CACHE BOOL "")
+set(CARES_BUILD_TESTS OFF CACHE BOOL "")
+add_subdirectory(thirdparty/c-ares)
 
 # 搜索第三方 liblfds 源码
 file(GLOB_RECURSE LFDS_ALL_SRC "thirdparty/liblfds711/src/*.c")
@@ -151,7 +130,13 @@ add_library(n2n STATIC
     src/tuntap_osx.c
     "${LFDS_ALL_SRC}"
 )
-
+target_include_directories(n2n PUBLIC
+	    ${CMAKE_CURRENT_BINARY_DIR}/c-ares
+            thirdparty/c-ares
+            ${CMAKE_CURRENT_BINARY_DIR}/curl/include
+            thirdparty/curl/include
+            thirdparty/include
+        )
 # 如果是 Windows，额外加 edge_utils_win32
 if(DEFINED WIN32)
     add_library(edge_utils_win32 src/edge_utils_win32.c)
@@ -165,13 +150,8 @@ if(N2N_OPTION_AES)
 endif(N2N_OPTION_AES)
 
 # 链接 pthread 和 dl
-target_link_libraries(n2n pthread dl)
+target_link_libraries(n2n pthread dl c-ares)
 
-# 添加 c-ares 依赖关系，确保 n2n 编译前 c-ares 已经拉取好
-add_dependencies(n2n c-ares)
-
-# 链接 c-ares 静态库
-target_link_libraries(n2n cares)
 
 # 创建 edge 可执行文件
 add_executable(edge src/edge.c)

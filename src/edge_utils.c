@@ -358,6 +358,11 @@ void strip_http_prefix(char *url) {
     } else if (strncmp(url, "https://", 8) == 0) {
         memmove(url, url + 8, strlen(url + 8) + 1);
     }
+    // 去除最后的 /
+    size_t len = strlen(url);
+    if (len > 1 && url[len - 1] == '/') {
+        url[len - 1] = '\0';
+    }
 }
 // 辅助函数：找最后一行的起始位置
 char *find_last_line_or_all(const char *buf) {

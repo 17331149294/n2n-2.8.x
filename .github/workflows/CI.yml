@@ -77,7 +77,7 @@ jobs:
 
           if [ ! -d "/opt/openssl-${{ env.TARGET }}" ]; then
             #克隆openssl
-            git clone --recursive https://github.com/openssl/openssl -b OpenSSL_1_1_1g
+            git clone --recursive https://github.com/openssl/openssl -b OpenSSL_1_1_1-stable
             cd openssl
             echo "###########################编译openssl依赖库########################"
             ./Configure no-shared no-zlib --prefix=/opt/openssl-${{ env.TARGET }} ${{ env.OPENSSL_TARGET }} LDFLAGS="-static -I/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/include -L/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/lib" CFLAGS="-static -I/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/include -L/opt/musl_gcc/${{ env.TARGET }}-cross/${{ env.TARGET }}/lib"
@@ -101,7 +101,6 @@ jobs:
             -DCMAKE_STRIP=${STRIP} \
             -DOPENSSL_ROOT_DIR=/opt/openssl-${{ env.TARGET }} \
             -DOPENSSL_USE_STATIC_LIBS=TRUE \
-            -DHAVE_OPENSSL_1_1=ON \
             -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++" 
 
           make -j$(nproc)
@@ -123,7 +122,7 @@ jobs:
           /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip supernode
           /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip n2n-benchmark
           #压缩
-          #upx --lzma --best edge
+          upx --lzma --best edge
           upx --lzma --best example_edge_embed
           upx --lzma --best example_edge_embed_quick_edge_init
           upx --lzma --best example_sn_embed
@@ -161,4 +160,4 @@ jobs:
        with:
         token: ${{ secrets.GITHUB_TOKEN }}
         retain_days: 2
-        keep_minimum_runs: 0
+        keep_minimum_runs: 0 
