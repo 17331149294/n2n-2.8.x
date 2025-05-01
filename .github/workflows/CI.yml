@@ -116,16 +116,10 @@ jobs:
           file edge
           #剥离
           /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip edge
-          /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip example_edge_embed
-          /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip example_edge_embed_quick_edge_init
-          /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip example_sn_embed
           /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip supernode
           /opt/musl_gcc/${{ env.TARGET }}-cross/bin/${{ env.TARGET }}-strip n2n-benchmark
           #压缩
           upx --lzma --best edge
-          upx --lzma --best example_edge_embed
-          upx --lzma --best example_edge_embed_quick_edge_init
-          upx --lzma --best example_sn_embed
           upx --lzma --best supernode
           upx --lzma --best n2n-benchmark
           zip n2n-pthread-${{ env.TARGET }}.zip edge example_edge_embed example_edge_embed_quick_edge_init example_sn_embed supernode n2n-benchmark
@@ -140,9 +134,6 @@ jobs:
          name: n2n-pthread-${{ env.TARGET }}
          path: |
            build/edge
-           build/example_edge_embed
-           build/example_edge_embed_quick_edge_init
-           build/example_sn_embed
            build/supernode
            build/n2n-benchmark
       - name: 发布
