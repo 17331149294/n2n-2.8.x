@@ -1,12 +1,12 @@
 # n2n_多线程_mipsel
 <p align="center">
-<a href="https://github.com/lmq8267/n2n-2.8.x/releases"><img src="https://img.shields.io/github/downloads/lmq8267/n2n-2.8.x/total">
-<a href="https://github.com/lmq8267/n2n-2.8.x/graphs/contributors"><img src="https://img.shields.io/github/contributors-anon/lmq8267/n2n-2.8.x">
-<a href="https://github.com/lmq8267/n2n-2.8.x/releases/"><img src="https://img.shields.io/github/release/lmq8267/n2n-2.8.x">
-<a href="https://github.com/lmq8267/n2n-2.8.x/issues"><img src="https://img.shields.io/github/issues-raw/lmq8267/n2n-2.8.x">
-<a href="https://github.com/lmq8267/n2n-2.8.x/discussions"><img src="https://img.shields.io/github/discussions/lmq8267/n2n-2.8.x">
-<a href="GitHub repo size"><img src="https://img.shields.io/github/repo-size/lmq8267/n2n-2.8.x?color=red&style=flat-square">
-<a href="https://github.com/lmq8267/n2n-2.8.x/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/actions/workflow/status/lmq8267/n2n-2.8.x/n2n.yml?branch=main" alt="Build status">
+<a href="https://github.com/lmq8267/n2n-2.8.x/releases"><img src="https://img.shields.io/github/downloads/lmq8267/n2n-2.8.x/total"></a>
+<a href="https://github.com/lmq8267/n2n-2.8.x/graphs/contributors"><img src="https://img.shields.io/github/contributors-anon/lmq8267/n2n-2.8.x"></a>
+<a href="https://github.com/lmq8267/n2n-2.8.x/releases/"><img src="https://img.shields.io/github/release/lmq8267/n2n-2.8.x"></a>
+<a href="https://github.com/lmq8267/n2n-2.8.x/issues"><img src="https://img.shields.io/github/issues-raw/lmq8267/n2n-2.8.x"></a>
+<a href="https://github.com/lmq8267/n2n-2.8.x/discussions"><img src="https://img.shields.io/github/discussions/lmq8267/n2n-2.8.x"></a>
+<a href="GitHub repo size"><img src="https://img.shields.io/github/repo-size/lmq8267/n2n-2.8.x?color=red&style=flat-square"></a>
+<a href="https://github.com/lmq8267/n2n-2.8.x/actions?query=workflow%3ABuild"><img src="https://img.shields.io/github/actions/workflow/status/lmq8267/n2n-2.8.x/CI.yml?branch=2.8.x-pthread" alt=""></a>
 </p>
 
 fork https://github.com/lucktu/cnn2n/tree/2.8.x-pthread
@@ -17,7 +17,8 @@ fork https://github.com/lucktu/cnn2n/tree/2.8.x-pthread
 
 1. 2022-12-25：v2.8.1 版，增加 auto ip 功能；
 2. 2023-01-06：修改主程序的帮助信息以及其监视口的输出格式，便于阅读；
-3. 2023-01-07：v2.8.x 版，支持“多线程”（测试版，不支持A2），作者为 [Oliver0624](https://github.com/Oliver0624)
+3. 2023-01-07：v2.8.x 版，支持“多线程”（测试版，不支持A4），作者为 [Oliver0624](https://github.com/Oliver0624)
+4. 2025-04-30: v2.8.x 版，支持“多线程” 增加了重定向和txt记录功能。
 
 如果你愿意参与代码的修正或增加，最好加入QQ群(196588661)讨论后进行。
 
