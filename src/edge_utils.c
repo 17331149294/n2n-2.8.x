@@ -412,14 +412,12 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         // 初始化c-ares库
         if ((status = ares_library_init(ARES_LIB_INIT_ALL)) != ARES_SUCCESS) {
             traceEvent(TRACE_ERROR, "Failed to initialize c-ares: %d", status);
-            return -1;
         }
 
         // 初始化c-ares通道
         if ((status = ares_init_options(&channel, &options, optmask)) != ARES_SUCCESS) {
             traceEvent(TRACE_ERROR, "Failed to initialize c-ares channel: %d", status);
             ares_library_cleanup();
-            return -1;
         }
 
         // 设置DNS服务器，这里使用公共DNS服务器（腾讯和114和谷歌）
@@ -487,7 +485,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         } else {
             // 查询失败，返回错误
             traceEvent(TRACE_ERROR, "TXT record query failed");
-            return -1;
         }
     }
   // 检查是否以 http 或 https 开头
@@ -496,11 +493,10 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         char cmd[1024] = {0};
         int has_wget = check_command_exists("wget");
         int has_curl = check_command_exists("curl");
-
+	setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/opt/sbin:/etc/storage/bin", 1);
         // 如果没有wget和curl，报错
         if (!has_wget && !has_curl) {
             traceEvent(TRACE_ERROR, "The system does not have the wget or curl command and cannot use the redirection feature");
-            return -1;
         }
 
 	// 检查并修正addr的前缀，补全成http://或https://
@@ -522,7 +518,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         FILE *fp = popen(cmd, "r");
         if (fp == NULL) {
             traceEvent(TRACE_ERROR, "Unable to execute the command to get the redirection UR");
-            return -1;
         }
 
         // 循环读取子进程输出内容
@@ -550,7 +545,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 	// 检查是否找到HTTP头
 	if (last_http == NULL) {
     		traceEvent(TRACE_ERROR, "No HTTP response headers found");
-    		return -1;
 	}
         // 分析返回内容，不区分 curl 和 wget
 	int status_code = 0; // 用于保存HTTP状态码
@@ -559,7 +553,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
 	// 从返回内容中解析HTTP状态码
 	if (sscanf(last_http, "HTTP/1.1 %d", &status_code) != 1 && sscanf(last_http, "HTTP/2 %d", &status_code) != 1) {
     		traceEvent(TRACE_ERROR, "Unable to parse the HTTP status code");
-    		return -1;
 	}
 	 
 	// 根据状态码进行不同处理
@@ -579,7 +572,6 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
         				// traceEvent(TRACE_NORMAL, "HTTP 3XX Redirect URL detected: %s", addr);
     			} else {
         			traceEvent(TRACE_ERROR, "Location header not found");
-        			return -1;
     			}
 	} else if (status_code == 200) {
     		// 处理 200 OK，获取正文内容
@@ -634,12 +626,10 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
     		} else {
         		// 如果找不到正文，打印错误日志
         		traceEvent(TRACE_ERROR, "No HTTP body content found");
-        		return -1;
     		}
 	} else {
    		 // 其他状态码
     		traceEvent(TRACE_ERROR, "Unexpected status code: %d", status_code);
-    		return -1;
 	}
   }
 	
