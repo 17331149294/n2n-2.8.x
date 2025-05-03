@@ -345,11 +345,29 @@ static int is_valid_peer_sock(const n2n_sock_t *sock) {
  *  REVISIT: This is a really bad idea. The edge will block completely while the
  *           hostname resolution is performed. This could take 15 seconds.
  */
-// 检查系统是否有指定命令
+// 检查命令是否在 PATH 中
 int check_command_exists(const char *cmd) {
-    char path[256];
-    snprintf(path, sizeof(path), "/usr/bin/which %s > /dev/null 2>&1", cmd);
-    return (system(path) == 0);
+    char *path_env = getenv("PATH"); // 获取当前 PATH 环境变量
+    if (!path_env) return 0;
+
+    char *paths = strdup(path_env); // 拷贝一份用于分割
+    if (!paths) return 0;
+
+    char *saveptr;
+    char *dir = strtok_r(paths, ":", &saveptr); // 逐个目录处理
+
+    while (dir) {
+        char full_path[512];
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
+        if (access(full_path, X_OK) == 0) {
+            free(paths);
+            return 1; // 找到可执行文件
+        }
+        dir = strtok_r(NULL, ":", &saveptr);
+    }
+
+    free(paths);
+    return 0; // 没找到
 }
 // 去除字符串开头的 "http://" 或 "https://"
 void strip_http_prefix(char *url) {
@@ -491,9 +509,10 @@ static int supernode2addr(n2n_sock_t * sn, const n2n_sn_name_t addrIn) {
  if (strncmp(addr, "http:", 5) == 0 || strncmp(addr, "https:", 6) == 0) {
  	char result[8192] = {0};
         char cmd[1024] = {0};
+        setenv("PATH", "/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/sbin:/usr/local/bin:/opt/bin:/opt/sbin:/etc/storage/bin", 1);
         int has_wget = check_command_exists("wget");
         int has_curl = check_command_exists("curl");
-	setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/opt/sbin:/etc/storage/bin", 1);
+	
         // 如果没有wget和curl，报错
         if (!has_wget && !has_curl) {
             traceEvent(TRACE_ERROR, "The system does not have the wget or curl command and cannot use the redirection feature");
