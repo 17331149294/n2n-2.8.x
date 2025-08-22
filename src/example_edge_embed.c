@@ -38,7 +38,7 @@ int main()
     conf.local_port = 0;                                                                     // What port to use (0 = any port)
     conf.mgmt_port = N2N_EDGE_MGMT_PORT;                                                     // Edge management port (5644 by default)
     conf.register_interval = 1;                                                              // Interval for both UDP NAT hole punching and supernode registration
-    conf.register_ttl = 1;                                                                   // Interval for UDP NAT hole punching through supernode
+    conf.register_ttl = 2;                                                                   // Interval for UDP NAT hole punching through supernode
     edge_conf_add_supernode(&conf, "localhost:1234");                                        // Supernode to connect to
     conf.tos = 16;                                                                           // Type of service for sent packets
     conf.transop_id = N2N_TRANSFORM_ID_TWOFISH;                                              // Use the twofish encryption
