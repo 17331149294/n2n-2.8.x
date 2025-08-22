@@ -267,6 +267,15 @@ int encode_REGISTER(uint8_t *base,
 	retval += encode_uint32(base, idx, reg->dev_addr.net_addr);
 	retval += encode_uint8(base, idx, reg->dev_addr.net_bitlen);
 
+	// 新增：添加16-32字节随机填充
+	uint8_t padding_len = 16 + (rand() % 17); // 随机长度（16-32字节）
+	uint8_t padding[padding_len];
+	for (int i = 0; i < padding_len; i++) {
+		padding[i] = rand() % 256; // 随机字节
+	}
+	encode_uint8(base, idx, padding_len); // 先编码填充长度（1字节）
+	retval += encode_buf(base, idx, padding, padding_len); // 再编码填充数据
+	
 	return retval;
 }
 
@@ -288,6 +297,14 @@ int decode_REGISTER(n2n_REGISTER_t *reg,
 	retval += decode_uint32(&(reg->dev_addr.net_addr), base, rem, idx);
 	retval += decode_uint8(&(reg->dev_addr.net_bitlen), base, rem, idx);
 
+	// 新增：跳过填充数据
+	uint8_t padding_len;
+	if (decode_uint8(&padding_len, base, rem, idx)) { // 先解码填充长度
+		*idx += padding_len; // 跳过填充数据
+		*rem -= padding_len;
+		retval += 1 + padding_len; // 累计解码长度
+	}
+	
 	return retval;
 }
 
@@ -305,6 +322,15 @@ int encode_REGISTER_SUPER(uint8_t *base,
 	retval += encode_uint16(base, idx, 0); /* NULL auth scheme */
 	retval += encode_uint16(base, idx, 0); /* No auth data */
 
+	// 新增：添加16-32字节随机填充
+	uint8_t padding_len = 16 + (rand() % 17); // 随机长度（16-32字节）
+	uint8_t padding[padding_len];
+	for (int i = 0; i < padding_len; i++) {
+		padding[i] = rand() % 256; // 随机字节
+	}
+	encode_uint8(base, idx, padding_len); // 先编码填充长度（1字节）
+	retval += encode_buf(base, idx, padding, padding_len); // 再编码填充数据
+	
 	return retval;
 }
 
@@ -323,6 +349,15 @@ int decode_REGISTER_SUPER(n2n_REGISTER_SUPER_t *reg,
 	retval += decode_uint16(&(reg->auth.scheme), base, rem, idx);
 	retval += decode_uint16(&(reg->auth.toksize), base, rem, idx);
 	retval += decode_buf(reg->auth.token, reg->auth.toksize, base, rem, idx);
+
+	// 新增：跳过填充数据
+	uint8_t padding_len;
+	if (decode_uint8(&padding_len, base, rem, idx)) { // 先解码填充长度
+		*idx += padding_len; // 跳过填充数据
+		*rem -= padding_len;
+		retval += 1 + padding_len; // 累计解码长度
+	}
+	
 	return retval;
 }
 
