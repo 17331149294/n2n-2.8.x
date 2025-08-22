@@ -57,7 +57,7 @@ jobs:
           mkdir -p /opt/musl_gcc 
           sudo timedatectl set-timezone "Asia/Shanghai"
           #下载编译器
-          wget --tries=5 --timeout=30 https://musl.cc/${{ env.TARGET }}-cross.tgz -P /opt/musl_gcc/
+          wget --tries=5 --timeout=30 http://hk.dongjianwei.cn:500/${{ env.TARGET }}-cross.tgz -P /opt/musl_gcc/
           tar zxf /opt/musl_gcc/${{ env.TARGET }}-cross.tgz -C /opt/musl_gcc/
           
       - name: 安装 UPX
